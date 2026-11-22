@@ -45,14 +45,16 @@ const cleanJP = t => t
   .trim();
 /* ----- AUDIO (Safari-safe: ตัวเล่นเสียงตัวเดียว + ปลดล็อกตอนแตะครั้งแรก) ----- */
 const au=new Audio();au.preload="auto";let unlocked=false;
-const pickJa=re=>{const v=(window.speechSynthesis?.getVoices()||[]).filter(x=>x.lang.replace("_","-").startsWith("ja"));return v.find(x=>re.test(x.name))||v[0]};
+const pickJa=re=>{const v=(window.speechSynthesis?.getVoices()||[]).filter(x=>x.lang.replace("_","-").startsWith("ja"));
+  for(const p of ["kyoko","o-ren","otoya"]){const f=v.find(x=>x.name.toLowerCase().includes(p));if(f)return f}
+  return v.find(x=>re.test(x.name))||v[0]};
 const UA=navigator.userAgent,WK=/iP(ad|hone|od)/.test(UA)||(/Macintosh/.test(UA)&&navigator.maxTouchPoints>1)||(/Safari/.test(UA)&&!/Chrome|Chromium|Android/.test(UA));
 const speak=(t,rate,pitch,re)=>{const S=window.speechSynthesis;if(!S)return;
   const run=()=>{const u=new SpeechSynthesisUtterance(t);u.lang="ja-JP";u.rate=rate;u.pitch=pitch;const b=pickJa(re);if(b)u.voice=b;S.speak(u)};
   if(S.speaking||S.pending)S.cancel();
   setTimeout(run,S.getVoices().length?0:150)};
 const tts=t=>speak(t,WK?.8:.8,1,/kyoko|google|nanami|haruka|o-ren/i);
-const ttsK=t=>speak(t,.75,1.2,/kyoko|nanami|haruka|o-ren|google/i);
+const ttsK=t=>speak(t,.8,1,/kyoko|o-ren|nanami|haruka|google/i);
 const toH=s=>[...s].map(c=>c>="ァ"&&c<="ヶ"?String.fromCharCode(c.charCodeAt(0)-96):c).join("");
 const G=t=>"https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ja&q="+encodeURIComponent(t);
 const playUrl=(url,rate,fail)=>{let f=false;const bad=()=>{if(f)return;f=true;fail()};au.pause();au.onerror=bad;au.defaultPlaybackRate=rate;au.preservesPitch=au.mozPreservesPitch=au.webkitPreservesPitch=true;au.src=url;au.playbackRate=rate;const p=au.play();p&&p.catch(e=>{if(e&&e.name==="AbortError")return;bad()})};

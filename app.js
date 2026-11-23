@@ -63,7 +63,9 @@ const sayKfx=t=>{t=cleanJP(t);if(WK)return ttsK(t);playUrl(G(t),1.08,()=>ttsK(t)
 const sayK=t=>{t=cleanJP(t);if([...t].length>24)return sayKfx(t);
   const f=encodeURIComponent(t)+".wav",d=VDIR[mkey]||"kitty";
   playUrl("voice/"+d+"/"+f,1,()=>d==="kitty"?sayKfx(t):playUrl("voice/kitty/"+f,1,()=>sayKfx(t)))};
-const say=sayK;
+const hid=s=>{let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0}return h.toString(16).padStart(8,"0")};
+const sayT=t=>{t=cleanJP(t);playUrl("voice/tts/"+hid(t)+".mp3",1,()=>tts(t))};
+const say=sayT;
 const sayKana=t=>{t=cleanJP(t);
   const T=[...t].length===1?t+"、":t;
   const go=()=>speak(T,.7,1,/kyoko|o-ren|otoya|nanami|haruka|google/i);
@@ -483,15 +485,40 @@ function speakPage(i){
     $("#sl").onclick=()=>say(s.jp);setTimeout(()=>say(s.jp),200);
     $("#sn").onclick=()=>{try{curRec&&curRec.abort()}catch{}n++;draw()};
     $("#sm").onclick=()=>{
-      if(!SR)return;if(listening){try{curRec.stop()}catch{}return}
-      window.speechSynthesis?.cancel();au.pause();
-      const rc=curRec=new SR();rc.lang="ja-JP";rc.interimResults=false;rc.maxAlternatives=5;
-      listening=true;$("#sm").textContent="⏹ กำลังฟัง… (แตะเพื่อหยุด)";$("#sm").classList.add("rec");$("#sr").textContent="";
-      rc.onresult=e=>{let b=null;for(const a of e.results[0]){const g=grade(s.jp,a.transcript);if(!b||g.sc>b.sc){b=g;b.h=a.transcript}}if(b)show(s,b)};
-      rc.onerror=e=>{const el=$("#sr");if(el)el.innerHTML=`<p class="sfb bad">${e.error==="not-allowed"||e.error==="service-not-allowed"?"ยังไม่ได้อนุญาตไมโครโฟน ตรวจสิทธิ์ในเบราว์เซอร์":e.error==="no-speech"?"ไม่ได้ยินเสียง ลองพูดให้ดังขึ้นอีกนิด":"เกิดข้อผิดพลาด: "+e.error}</p>`};
-      rc.onend=()=>{listening=false;const m=$("#sm");if(m){m.textContent="🎤 กดแล้วพูดตาม";m.classList.remove("rec")}};
-      try{rc.start()}catch{listening=false}
+     if(!SR)return;if(listening){try{curRec.stop()}catch{}return}
+     window.speechSynthesis?.cancel();au.pause();
+     const rc=curRec=new SR();rc.lang="ja-JP";rc.interimResults=true;rc.continuous=false;rc.maxAlternatives=5;
+     let got=false,err=false,last="";
+     const finish=list=>{let b=null;for(const a of list){const g=grade(s.jp,a.transcript);if(!b||g.sc>b.sc){b=g;b.h=a.transcript}}if(b){got=true;show(s,b)}};
+     listening=true;$("#sm").textContent="⏹ กำลังฟัง… (แตะเพื่อหยุด)";$("#sm").classList.add("rec");
+     $("#sr").innerHTML=`<p class="sheard">กำลังฟัง… พูดได้เลย</p>`;
+     rc.onresult=e=>{const res=e.results[e.results.length-1];last=res[0].transcript;
+      if(res.isFinal)finish(res);else $("#sr").innerHTML=`<p class="sheard">ได้ยิน: ${last}</p>`};
+     rc.onerror=e=>{err=true;const el=$("#sr");if(el)el.innerHTML=`<p class="sfb bad">${e.error==="not-allowed"||e.error==="service-not-allowed"?"ยังไม่ได้อนุญาตไมโครโฟน/การพิมพ์ด้วยเสียง ตรวจการตั้งค่าเครื่อง":e.error==="no-speech"?"ไม่ได้ยินเสียง ลองพูดให้ดังขึ้นอีกนิด":"เกิดข้อผิดพลาด: "+e.error}</p>`};
+     rc.onend=()=>{listening=false;const m=$("#sm");if(m){m.textContent="🎤 กดแล้วพูดตาม";m.classList.remove("rec")}
+      if(!got&&!err){if(last)finish([{transcript:last}]);else{const el=$("#sr");if(el)el.innerHTML=`<p class="sfb bad">ไม่ได้รับเสียงจากไมค์ ลองกดใหม่แล้วพูดทันที</p>`}}};
+     try{rc.start()}catch{listening=false}
     };
   };
   draw();
 }
+window.listTTS=()=>{
+  const S=new Set(),add=t=>{t=cleanJP(t);if(t)S.add(t)};
+  ["hiragana","katakana"].forEach(k=>flat(k).forEach(x=>add(x.jp)));
+  VOCAB.forEach(v=>add(v.jp));
+  PART.forEach(p=>{add(p.p);add(p.ex)});
+  READ.forEach(r=>{
+    add(r.p.map(x=>rjp(x[0])).join(" "));
+    r.p.forEach(x=>{
+      add(rjp(x[0]));
+      [...x[0].matchAll(/\{([^|}]+)\|/g)].forEach(m=>add(m[1]));
+      [...x[0].matchAll(/«[hnaf]:([^»]+)»/g)].forEach(m=>add(m[1]));
+      rjp(x[0]).split("。").map(s=>s.trim()).filter(Boolean).forEach(s=>add(s+"。"));
+    });
+  });
+  const arr=[...S].map(t=>({t,id:hid(t)}));
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(arr)],{type:"application/json"}));
+  a.download="tts_list.json";a.click();
+  return arr.length;
+};

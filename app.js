@@ -460,8 +460,12 @@ const lcsHit=(a,b)=>{const n=a.length,m=b.length,d=Array.from({length:n+1},()=>n
   for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)d[i][j]=a[i]===b[j]?d[i+1][j+1]+1:Math.max(d[i+1][j],d[i][j+1]);
   const hit=new Set();let i=0,j=0;while(i<n&&j<m){if(a[i]===b[j]){hit.add(i);i++;j++}else if(d[i+1][j]>=d[i][j+1])i++;else j++}return hit};
 const grade=(target,heard)=>{const t=[...sn(target)],h=[...sn(heard)],hit=lcsHit(t,h);
-  const kj=h.filter(c=>/[一-龯々]/.test(c)).length,den=Math.max(4,t.length-kj*2);
-  return{sc:Math.min(100,Math.round(Math.min(hit.size,den)/den*100)),t,hit}};
+  const kj=h.filter(c=>/[一-龯々]/.test(c)).length;
+  // ให้เครดิตคันจิที่แปลงไม่ได้ แต่ไม่เกิน 25% ของประโยค
+  const credit=Math.min(t.length-hit.size,Math.round(kj*1.5),Math.floor(t.length*.25));
+  // ถ้าพูดยาวเกินประโยคมาก ลดคะแนนลง
+  const len=Math.min(1,t.length*1.5/Math.max(h.length,1));
+  return{sc:Math.min(100,Math.round((hit.size+credit)/t.length*len*100)),t,hit}};
 addEventListener("hashchange",()=>{try{curRec&&curRec.abort()}catch{}});
 
 views.speakList=()=>`<a class="crumb" href="#/read">← บทอ่าน</a><h1 class="page">ฝึกพูดตาม</h1><p class="sub">เลือกบทที่อยากฝึก ฟังต้นแบบแล้วพูดตามทีละประโยค</p><div class="cats">${READ.map((r,i)=>`<a class="cat" href="#/speak/${i}"><span>${r.e}</span>${r.t}<small>${r.th}</small></a>`).join("")}</div>`;

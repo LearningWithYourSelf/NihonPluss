@@ -29,7 +29,6 @@ const PART=`は|wa|ชี้หัวข้อของประโยค (ส�
 の|no|ของ (ความเป็นเจ้าของ)|わたしの ほん。|watashi no hon|หนังสือของฉัน|||
 と|to|และ / กับ|ともだちと いきます。|tomodachi to ikimasu.|ไปกับเพื่อน|||
 も|mo|ก็ / เหมือนกัน|わたしも がくせいです。|watashi mo gakusei desu.|ฉันก็เป็นนักเรียน|||
-へ|e|ไปทางทิศ... |にほんへ いきます。|nihon e ikimasu.|ไปญี่ปุ่น|ni ho n he i ki ma su|ni ho n e i ki ma su|へ เป็นคำช่วยอ่านว่า "เอะ (e)" ไม่ใช่ "เฮะ (he)"
 から|kara|จาก / เพราะ|タイから きました。|tai kara kimashita.|มาจากไทย|||
 まで|made|จนถึง|ごじまで はたらきます。|goji made hatarakimasu.|ทำงานถึงห้าโมง|||
 か|ka|ท้ายประโยคทำให้เป็นคำถาม|おげんきですか。|ogenki desu ka.|สบายดีไหม|||`.split("\n").map(l=>{const[p,rd,use,ex,exr,th,wr,ok,note]=l.split("|");return{p,rd,use,ex,exr,th,wr,ok,note}});

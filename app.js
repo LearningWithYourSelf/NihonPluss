@@ -63,8 +63,11 @@ const sayKfx=t=>{t=cleanJP(t);if(WK)return ttsK(t);playUrl(G(t),1.08,()=>ttsK(t)
 const sayK=t=>{t=cleanJP(t);if([...t].length>24)return sayKfx(t);
   const f=encodeURIComponent(t)+".wav",d=VDIR[mkey]||"kitty";
   playUrl("voice/"+d+"/"+f,1,()=>d==="kitty"?sayKfx(t):playUrl("voice/kitty/"+f,1,()=>sayKfx(t)))};
+// ข้อความที่ต้องอ่านต่างจากที่เขียน (คำช่วย へ は を)
+const PFIX={"へ":"え","は":"わ","を":"お","にほんへ いきます。":"にほんえ いきます。","わたしは たなかです。":"わたしわ たなかです。","みずを のみます。":"みずお のみます。"};
+const spoken=t=>PFIX[t]||t;
 const hid=s=>{let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0}return h.toString(16).padStart(8,"0")};
-const sayT=t=>{t=cleanJP(t);playUrl("voice/tts/"+hid(t)+".mp3",1,()=>tts(t))};
+const sayT=t=>{t=cleanJP(t);playUrl("voice/tts/"+hid(t)+".mp3",1,()=>tts(spoken(t)))};
 const say=sayT;
 const sayKana=t=>{t=cleanJP(t);
   const T=[...t].length===1?t+"、":t;
